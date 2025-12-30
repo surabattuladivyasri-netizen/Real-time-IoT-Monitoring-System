@@ -1,0 +1,11 @@
+# Server-side requirements
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+psycopg2-binary==2.9.9
+pandas==2.1.1
+openpyxl==3.1.2
+sqlalchemy==2.0.21
+
+# Client-side (NanoPi) requirements
+requests==2.31.0
+smbus2==0.4.2

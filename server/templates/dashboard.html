@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hardware Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --border-color: #e3e8ee;
+            --text-primary: #314259;
+            --text-secondary: #7e8c9f;
+            --accent-color: #64748b;
+            --accent-hover: #475569;
+            --link-color: #4b6cb7;
+            --link-hover: #3a5698;
+            --green-light: #dcfce7;
+            --green: #22c55e;
+            --red-light: #fee2e2;
+            --red: #ef4444;
+            --blue-light: #dbeafe;
+            --blue: #3b82f6;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 30px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border-left: 6px solid var(--link-color);
+        }
+        .header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1;
+        }
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        .nav-link {
+            padding: 12px 22px;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-md);
+            font-size: 0.9em;
+        }
+        .admin-button {
+            background: var(--accent-color);
+            color: white;
+        }
+        .admin-button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        .graphs-button {
+            background-color: var(--link-color);
+            color: white;
+        }
+        .graphs-button:hover {
+            background-color: var(--link-hover);
+            transform: translateY(-2px);
+        }
+        .main-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+        .section-title {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-left: 4px solid var(--link-color);
+            padding-left: 10px;
+        }
+        .data-columns {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        @media (max-width: 768px) {
+            .data-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        @media (max-width: 1200px) {
+            .sensor-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (max-width: 900px) {
+            .sensor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
+            .sensor-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .sensor-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 18px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+        }
+        .sensor-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 6px;
+            background-color: var(--border-color);
+            transition: background-color 0.3s ease;
+        }
+        .sensor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        .sensor-card.red::before { background-color: var(--red); }
+        .sensor-card.blue::before { background-color: var(--blue); }
+        .sensor-card.green::before { background-color: var(--green); }
+        
+        .sensor-card .details { 
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+        .sensor-card .details .channel-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        .sensor-card .details .value-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sensor-card .details .value-row .label {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .sensor-card .details .value-row .value {
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+        .sensor-card .details .value-row .value.red { color: var(--red); }
+        .sensor-card .details .value-row .value.blue { color: var(--blue); }
+        .sensor-card .details .value-row .value.green { color: var(--green); }
+        .sensor-card .details .value-row .value.orange { color: #f59e0b; }
+        
+        .gpio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+        .gpio-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 10px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            text-align: center;
+            cursor: pointer;
+            min-height: 100px;
+            box-shadow: var(--shadow-md);
+            border: 2px solid transparent;
+        }
+        .gpio-block.gpio-low-safe {
+            background: var(--green-light);
+            border-color: var(--green);
+        }
+        .gpio-block.gpio-high-alarm {
+            background: var(--red-light);
+            border-color: var(--red);
+        }
+        .gpio-block:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        .gpio-block .icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 10px;
+        }
+        .gpio-block .icon img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .gpio-block .name {
+            font-size: 0.9em;
+            font-weight: 600;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+        .gpio-block .time-info {
+            font-size: 0.7em;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            line-height: 1.2;
+        }
+        .gpio-block.gpio-high-alarm .time-info {
+            color: var(--red);
+        }
+        .info-message {
+            color: var(--text-secondary);
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 16px;
+            font-weight: 500;
+            text-align: center;
+            grid-column: 1 / -1;
+            box-shadow: var(--shadow-md);
+        }
+        #no-clients {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            padding: 50px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Hardware Dashboard</h1>
+        <div class="nav-buttons">
+            <a href="/graphs" class="nav-link graphs-button">📈 View Graphs</a>
+            <a href="/admin/login" class="nav-link admin-button">⚙️ Admin Panel</a>
+        </div>
+    </header>
+    <main class="main-container" id="dashboard"></main>
+
+    <audio id="alarmSound" src="{{ url_for('static', filename='alarm.mp3') }}" preload="auto" loop></audio>
+    <script>
+        const alarmSound = document.getElementById('alarmSound');
+        let activeAlarms = {};
+        let acknowledgedAlarms = {};
+
+        function getTemperatureColorClass(temp) {
+            if (temp === null) return '';
+            if (temp >= 40) return 'red';
+            if (temp >= 30 && temp < 40) return 'orange';
+            if (temp >= 20 && temp < 30) return 'green';
+            if (temp < 20) return 'blue';
+            return 'black';
+        }
+        
+        function getHumidityColorClass(hum) {
+            if (hum === null) return '';
+            if (hum >= 70) return 'red';
+            if (hum >= 40 && hum < 70) return 'green';
+            if (hum < 40) return 'blue';
+            return 'black';
+        }
+
+        function formatDuration(seconds) {
+            if (seconds === null) return 'N/A';
+            
+            let result = '';
+            const d = Math.floor(seconds / (3600 * 24));
+            const h = Math.floor((seconds % (3600 * 24)) / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            
+            if (d > 0) result += `${d}d `;
+            if (h > 0) result += `${h}h `;
+            if (m > 0) result += `${m}m `;
+            
+            if (result === '') {
+                return `${Math.floor(seconds)}s`;
+            }
+            
+            return result.trim();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const d = new Date(dateString);
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            return `${day}-${month}-${year} ${hours}:${minutes}`;
+        }
+        
+        function updateAlarmState() {
+            const shouldBePlaying = Object.keys(activeAlarms).some(key => !acknowledgedAlarms[key]);
+            const isPlaying = !alarmSound.paused;
+
+            if (shouldBePlaying && !isPlaying) {
+                alarmSound.play().catch(e => console.error("Error playing alarm sound:", e));
+            } else if (!shouldBePlaying && isPlaying) {
+                alarmSound.pause();
+                alarmSound.currentTime = 0;
+            }
+        }
+
+        function handleGpioClick(event) {
+            const gpioBlock = event.currentTarget;
+            const clientId = gpioBlock.dataset.clientId;
+            const gpioPin = gpioBlock.dataset.gpioPin;
+            const key = `${clientId}-${gpioPin}`;
+            
+            if (activeAlarms.hasOwnProperty(key)) {
+                acknowledgedAlarms[key] = true;
+                updateAlarmState();
+            }
+        }
+        
+        async function fetchData() {
+            const container = document.getElementById('dashboard');
+            try {
+                const response = await fetch('/data');
+                const data = await response.json();
+                
+                if (Object.keys(data).length === 0) {
+                    if (!document.getElementById('no-clients')) {
+                        container.innerHTML = '<div id="no-clients" class="info-message">Waiting for client data...</div>';
+                    }
+                    activeAlarms = {};
+                    acknowledgedAlarms = {};
+                    updateAlarmState();
+                    return;
+                }
+
+                let allSensorCards = '';
+                let allGpioBlocks = '';
+                const currentHighGpios = {};
+                
+                for (const [clientId, info] of Object.entries(data)) {
+                    if (info.is_connected) {
+                        if (info.combined_sensors && info.combined_sensors.length > 0) {
+                            info.combined_sensors.forEach((sensor) => {
+                                const name = info.display_name + ' | ' + sensor.display_name;
+                                const tempValue = sensor.temperature !== null ? `${sensor.temperature}°C` : 'N/A';
+                                const humValue = sensor.humidity !== null ? `${sensor.humidity}%` : 'N/A';
+                                const tempClass = getTemperatureColorClass(sensor.temperature);
+                                const humClass = getHumidityColorClass(sensor.humidity);
+
+                                allSensorCards += `
+                                    <div class="sensor-card">
+                                        <div class="details">
+                                            <div class="channel-name">${name}</div>
+                                            <div class="value-row">
+                                                <div class="label">Temp:</div>
+                                                <div class="value ${tempClass}">${tempValue}</div>
+                                            </div>
+                                            <div class="value-row">
+                                                <div class="label">Hum:</div>
+                                                <div class="value ${humClass}">${humValue}</div>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            });
+                        }
+
+                        if (info.gpio_pins && info.gpio_pins.length > 0) {
+                            info.gpio_pins.forEach((pin, index) => {
+                                const state = info.gpio_statuses[index];
+                                const alias = info.display_name + ' | ' + info.gpio_aliases[index];
+                                const key = `${clientId}-${pin}`;
+                                let stateClass, iconSrc, iconAlt, timeInfoHtml;
+                                const alarmLog = info.gpio_alarm_logs[pin];
+
+                                if (state === 1) { // Pin is HIGH (ALARM state)
+                                    stateClass = 'gpio-high-alarm';
+                                    iconSrc = '{{ url_for("static", filename="warning.png") }}';
+                                    iconAlt = 'Warning';
+                                    currentHighGpios[key] = true;
+                                    activeAlarms[key] = true;
+
+                                    if (alarmLog && alarmLog.start_time) {
+                                        timeInfoHtml = `<div class="time-info">Alarm since:<br>${formatDate(alarmLog.start_time)}</div>`;
+                                    } else {
+                                        timeInfoHtml = `<div class="time-info">Alarm since:<br>N/A</div>`;
+                                    }
+                                } else { // Pin is LOW (SAFE state)
+                                    stateClass = 'gpio-low-safe';
+                                    iconSrc = '{{ url_for("static", filename="safety.png") }}';
+                                    iconAlt = 'Safety';
+
+                                    delete activeAlarms[key];
+                                    delete acknowledgedAlarms[key];
+
+                                    if (alarmLog && alarmLog.start_time) {
+                                        const startTimeFormatted = formatDate(alarmLog.start_time);
+                                        const endTimeFormatted = alarmLog.end_time ? formatDate(alarmLog.end_time) : 'Active';
+                                        
+                                        timeInfoHtml = `<div class="time-info">Last Alarm:<br>${startTimeFormatted} to ${endTimeFormatted}</div>`;
+                                        
+                                    } else {
+                                        timeInfoHtml = `<div class="time-info">No recent alarms</div>`;
+                                    }
+                                }
+                                
+                                allGpioBlocks += `
+                                    <div class="gpio-block ${stateClass}" data-client-id="${clientId}" data-gpio-pin="${pin}">
+                                        <div class="icon">
+                                            <img src="${iconSrc}" alt="${iconAlt} Icon">
+                                        </div>
+                                        <div class="name">${alias}</div>
+                                        ${timeInfoHtml}
+                                    </div>`;
+                            });
+                        }
+                    }
+                }
+                
+                const combinedHtml = `
+                    <div class="data-columns">
+                        <div class="sensors-column">
+                            <h3 class="section-title">Temperature & Humidity Sensors</h3>
+                            <div class="sensor-grid">${allSensorCards}</div>
+                        </div>
+                        <div class="gpio-column">
+                            <h3 class="section-title">GPIO Status</h3>
+                            <div class="gpio-grid">${allGpioBlocks}</div>
+                        </div>
+                    </div>`;
+
+                container.innerHTML = combinedHtml;
+                
+                document.querySelectorAll('.gpio-block').forEach(block => {
+                    block.addEventListener('click', handleGpioClick);
+                });
+                
+                for (const key in acknowledgedAlarms) {
+                    if (!currentHighGpios.hasOwnProperty(key)) {
+                        delete acknowledgedAlarms[key];
+                    }
+                }
+                
+                updateAlarmState();
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                if (!document.getElementById('error-message')) {
+                    container.innerHTML = '<div id="error-message" class="info-message" style="border-color: var(--red); color: var(--red);">Error connecting to server. Retrying...</div>';
+                }
+                activeAlarms = {};
+                acknowledgedAlarms = {};
+                updateAlarmState();
+            }
+        }
+        setInterval(fetchData, 2000);
+        fetchData();
+    </script>
+</body>
+</html>

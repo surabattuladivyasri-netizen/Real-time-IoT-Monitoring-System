@@ -1,0 +1,183 @@
+{
+    "port": 5000,
+    "visible_gpio_pins": {
+        "pi-lab": [
+            0,
+            2,
+            3,
+            7,
+            12,
+            13,
+            14,
+            15,
+            16
+        ],
+        "pi-office": [],
+        "1": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        ],
+        "2": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        ],
+        "3": []
+    },
+    "client_aliases": {
+        "pi-lab": "pi-lab",
+        "1": "1",
+        "2": "2"
+    },
+    "gpio_aliases": {
+        "pi-lab": {
+            "0": "GPIO 0",
+            "2": "GPIO 2",
+            "3": "GPIO 3",
+            "7": "GPIO 7",
+            "12": "GPIO 12",
+            "13": "GPIO 13",
+            "14": "GPIO 14",
+            "15": "GPIO 15",
+            "16": "GPIO 16"
+        },
+        "pi-office": {},
+        "1": {
+            "12": "GPIO 12",
+            "13": "GPIO 13",
+            "14": "GPIO 14",
+            "15": "GPIO 15",
+            "16": "GPIO 16",
+            "0": "GPIO 0",
+            "1": "GPIO 1",
+            "2": "GPIO 2",
+            "3": "GPIO 3",
+            "5": "GPIO 5",
+            "6": "GPIO 6",
+            "7": "GPIO 7"
+        },
+        "2": {
+            "12": "GPIO 12",
+            "13": "GPIO 13",
+            "14": "GPIO 14",
+            "15": "GPIO 15",
+            "16": "GPIO 16",
+            "0": "GPIO 0",
+            "1": "GPIO 1",
+            "2": "GPIO 2",
+            "3": "GPIO 3",
+            "4": "GPIO 4",
+            "5": "GPIO 5",
+            "6": "GPIO 6",
+            "7": "GPIO 7"
+        }
+    },
+    "i2c_aliases": {
+        "pi-lab": {},
+        "pi-office": {
+            "1": "CH 1",
+            "5": "CH 5"
+        },
+        "pi-lab_1": "ROOM 1",
+        "pi-lab_5": "ROOM 5",
+        "pi-lab_3": "ROOM 3",
+        "pi-lab_2": "ROOM 2",
+        "pi-lab_4": "ROOM 4",
+        "pi-lab_0": "ROOM 0",
+        "pi-lab_6": "ROOM 6",
+        "pi-lab_7": "ROOM 7",
+        "pi-lab_direct": "Direct Sensor",
+        "2_0": "Channel 0",
+        "2_1": "Channel 1",
+        "2_2": "Channel 2",
+        "2_3": "Channel 3",
+        "2_4": "Channel 4",
+        "2_5": "Channel 5",
+        "2_6": "Channel 6",
+        "2_7": "Channel 7",
+        "2_direct": "Direct Sensor",
+        "1": {
+            "0": "Channel 0",
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7"
+        },
+        "2": {
+            "0": "Channel 0",
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7"
+        }
+    },
+    "visible_i2c_sensors": {
+        "pi-lab": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            "direct"
+        ],
+        "pi-office": [],
+        "1": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        ],
+        "2": [
+            0
+        ],
+        "3": []
+    },
+    "hum_aliases": {
+        "1": {
+            "0": "Channel 0",
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7"
+        }
+    },
+    "visible_hum_sensors": {
+        "1": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+        ]
+    }
+}

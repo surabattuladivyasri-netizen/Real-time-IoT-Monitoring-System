@@ -1,0 +1,549 @@
+[
+    {
+        "id": "9ce684c6d385cbf5",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "82ff4a1f560fc98e",
+        "type": "mqtt in",
+        "z": "9ce684c6d385cbf5",
+        "name": "Device Status",
+        "topic": "device/status",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "7cc6a07f7a557c94",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 910,
+        "y": 480,
+        "wires": [
+            [
+                "1c02c4375ad78ebb",
+                "facbbb85c6290d9b"
+            ]
+        ]
+    },
+    {
+        "id": "1c02c4375ad78ebb",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "Debug Raw Payload",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1200,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "facbbb85c6290d9b",
+        "type": "function",
+        "z": "9ce684c6d385cbf5",
+        "name": "Prepare Insert Query",
+        "func": "try {\n    let d = msg.payload;\n\n    // If payload is a string, try parsing it\n    if (typeof d === \"string\") {\n        try {\n            d = JSON.parse(d);\n        } catch (e) {\n            node.warn(\"Failed to parse JSON string: \" + e.message);\n            return null;\n        }\n    }\n\n    if (typeof d !== \"object\" || d === null) {\n        node.warn(\"Payload is not an object, skipping...\");\n        return null;\n    }\n\n    let client_id = d.client_id || null;\n    let gpios = Array.isArray(d.gpio) ? d.gpio : [0, 0, 0, 0, 0, 0, 0, 0];\n    let temps = Array.isArray(d.temps) ? d.temps : [null, null, null, null, null, null, null, null];\n    let hums = Array.isArray(d.humd) ? d.humd : [null, null, null, null, null, null, null, null];\n    let timestamp = d.timestamp || null;\n\n    // Prepare the query for PostgreSQL node\n    msg.query = `\n        INSERT INTO readings (\n          client_id,\n          gpio0, gpio1, gpio2, gpio3, gpio4, gpio5, gpio6, gpio7,\n          temp0, temp1, temp2, temp3, temp4, temp5, temp6, temp7,\n          hum0, hum1, hum2, hum3, hum4, hum5, hum6, hum7,\n          timestamp\n        ) VALUES (\n          '${client_id}',\n          ${gpios[0] ?? 'NULL'}, ${gpios[1] ?? 'NULL'}, ${gpios[2] ?? 'NULL'}, ${gpios[3] ?? 'NULL'},\n          ${gpios[4] ?? 'NULL'}, ${gpios[5] ?? 'NULL'}, ${gpios[6] ?? 'NULL'}, ${gpios[7] ?? 'NULL'},\n          ${temps[0] ?? 'NULL'}, ${temps[1] ?? 'NULL'}, ${temps[2] ?? 'NULL'}, ${temps[3] ?? 'NULL'},\n          ${temps[4] ?? 'NULL'}, ${temps[5] ?? 'NULL'}, ${temps[6] ?? 'NULL'}, ${temps[7] ?? 'NULL'},\n          ${hums[0] ?? 'NULL'}, ${hums[1] ?? 'NULL'}, ${hums[2] ?? 'NULL'}, ${hums[3] ?? 'NULL'},\n          ${hums[4] ?? 'NULL'}, ${hums[5] ?? 'NULL'}, ${hums[6] ?? 'NULL'}, ${hums[7] ?? 'NULL'},\n          ${timestamp ?? 'NULL'}\n        )\n    `;\n\n    return msg;\n\n} catch (err) {\n    node.error(\"Insert function failed: \" + err.message, msg);\n    return null;\n}",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 520,
+        "wires": [
+            [
+                "2ad94d81f091ee35",
+                "ec5386296f626243"
+            ]
+        ]
+    },
+    {
+        "id": "2ad94d81f091ee35",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "Debug Insert Query",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "query",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1470,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "ccc8a2c93e83c1b5",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "Database Result",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1650,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "87ea4ff783e7fa74",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "🔧 CREATE TABLE",
+        "props": [
+            {
+                "p": "query",
+                "v": "CREATE TABLE IF NOT EXISTS readings (id SERIAL PRIMARY KEY, client_id TEXT, gpio0 INT, gpio1 INT, gpio2 INT, gpio3 INT, gpio4 INT, gpio5 INT, gpio6 INT, gpio7 INT, temp0 FLOAT, temp1 FLOAT, temp2 FLOAT, temp3 FLOAT, temp4 FLOAT, temp5 FLOAT, temp6 FLOAT, temp7 FLOAT, hum0 FLOAT, hum1 FLOAT, hum2 FLOAT, hum3 FLOAT, hum4 FLOAT, hum5 FLOAT, hum6 FLOAT, hum7 FLOAT, timestamp BIGINT, created_at TIMESTAMPTZ DEFAULT NOW());",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 930,
+        "y": 200,
+        "wires": [
+            [
+                "2777eda71980610f"
+            ]
+        ]
+    },
+    {
+        "id": "6c61d67dd4c1b05e",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "Table Creation Result",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1580,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "3b17e2ab93c3ac3a",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "📋 CHECK TABLE",
+        "props": [
+            {
+                "p": "query",
+                "v": "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = 'readings' ORDER BY ordinal_position;",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 930,
+        "y": 260,
+        "wires": [
+            [
+                "2777eda71980610f"
+            ]
+        ]
+    },
+    {
+        "id": "bf765ad600091234",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "🗑️ DROP TABLE",
+        "props": [
+            {
+                "p": "query",
+                "v": "DROP TABLE IF EXISTS readings;",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 920,
+        "y": 320,
+        "wires": [
+            [
+                "2777eda71980610f"
+            ]
+        ]
+    },
+    {
+        "id": "ed13643bfbde6b69",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "Test Data",
+        "props": [
+            {
+                "p": "payload",
+                "v": "{\"client_id\":\"1\",\"gpio\":[1,0,1,0,1,0,1,0],\"temps\":[31.75,null,32.31,null,null,null,null,null],\"timestamp\":6976040}",
+                "vt": "json"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 920,
+        "y": 580,
+        "wires": [
+            [
+                "facbbb85c6290d9b"
+            ]
+        ]
+    },
+    {
+        "id": "fe5fc4ee0305ffe7",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "Query Recent Data",
+        "props": [
+            {
+                "p": "query",
+                "v": "SELECT * FROM readings ORDER BY created_at DESC LIMIT 10;",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 950,
+        "y": 660,
+        "wires": [
+            [
+                "ec5386296f626243"
+            ]
+        ]
+    },
+    {
+        "id": "a5ab0e8fe2dc9955",
+        "type": "aedes broker",
+        "z": "9ce684c6d385cbf5",
+        "name": "Jai",
+        "mqtt_port": 1883,
+        "mqtt_ws_bind": "port",
+        "mqtt_ws_port": "",
+        "mqtt_ws_path": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "persistence_bind": "memory",
+        "dburl": "",
+        "usetls": false,
+        "x": 410,
+        "y": 300,
+        "wires": [
+            [
+                "056fbb01d1ecba19"
+            ],
+            [
+                "ef661c2a0f6b4996"
+            ]
+        ]
+    },
+    {
+        "id": "056fbb01d1ecba19",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "ef661c2a0f6b4996",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "debug 2",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 600,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "2777eda71980610f",
+        "type": "postgresql",
+        "z": "9ce684c6d385cbf5",
+        "name": "Table Creator",
+        "query": "",
+        "postgreSQLConfig": "9e3cdc8017bb3efa",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1290,
+        "y": 260,
+        "wires": [
+            [
+                "6c61d67dd4c1b05e"
+            ]
+        ]
+    },
+    {
+        "id": "ec5386296f626243",
+        "type": "postgresql",
+        "z": "9ce684c6d385cbf5",
+        "name": "Insert Data",
+        "query": "",
+        "postgreSQLConfig": "9e3cdc8017bb3efa",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1490,
+        "y": 660,
+        "wires": [
+            [
+                "ccc8a2c93e83c1b5"
+            ]
+        ]
+    },
+    {
+        "id": "8716656e06f1870f",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "🔧 CREATE TABLE",
+        "props": [
+            {
+                "p": "query",
+                "v": " CREATE TABLE IF NOT EXISTS gpio_alarm_log (     id SERIAL PRIMARY KEY,     client_id VARCHAR(80) NOT NULL,     pin_index INT NOT NULL,     start_time TIMESTAMPTZ NOT NULL,     end_time TIMESTAMPTZ ); ",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 940,
+        "y": 900,
+        "wires": [
+            [
+                "64dc0ad149c11426"
+            ]
+        ]
+    },
+    {
+        "id": "ae27b7d130170bdf",
+        "type": "debug",
+        "z": "9ce684c6d385cbf5",
+        "name": "Table Creation Result",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1590,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "5df2cc899f7cf913",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "📋 CHECK TABLE",
+        "props": [
+            {
+                "p": "query",
+                "v": "SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_name = 'gpio_alarm_log' ORDER BY ordinal_position;",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 940,
+        "y": 960,
+        "wires": [
+            [
+                "64dc0ad149c11426"
+            ]
+        ]
+    },
+    {
+        "id": "8535b06c496435be",
+        "type": "inject",
+        "z": "9ce684c6d385cbf5",
+        "name": "🗑️ DROP TABLE",
+        "props": [
+            {
+                "p": "query",
+                "v": "DROP TABLE IF EXISTS gpio_alarm_log;",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 930,
+        "y": 1020,
+        "wires": [
+            [
+                "64dc0ad149c11426"
+            ]
+        ]
+    },
+    {
+        "id": "64dc0ad149c11426",
+        "type": "postgresql",
+        "z": "9ce684c6d385cbf5",
+        "name": "Table Creator",
+        "query": "",
+        "postgreSQLConfig": "9e3cdc8017bb3efa",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1300,
+        "y": 960,
+        "wires": [
+            [
+                "ae27b7d130170bdf"
+            ]
+        ]
+    },
+    {
+        "id": "2a7b454494e408c6",
+        "type": "function",
+        "z": "9ce684c6d385cbf5",
+        "name": "gpio insert query",
+        "func": "// This function detects GPIO state changes to insert new alarms.\ntry {\n    const client_id = msg.payload.client_id;\n    const gpios = msg.payload.gpios;\n    const timestamp = msg.payload.timestamp;\n\n    if (!client_id || !Array.isArray(gpios) || gpios.length === 0) {\n        node.warn(\"Invalid payload. Missing client_id or gpios array.\");\n        return null;\n    }\n\n    // Use a flow variable to store the last known GPIO states for each client.\n    // This allows the function to track state changes between messages.\n    let lastStates = flow.get(`last_gpio_states_${client_id}`) || {};\n\n    let outputMsgs = [];\n\n    // Loop through each GPIO pin\n    gpios.forEach((current_state, pin_index) => {\n        const last_state = lastStates[pin_index];\n\n        // Only process if the state has changed from a known previous state.\n        if (current_state !== last_state) {\n            // Check for a transition from LOW (0) to HIGH (1)\n            if (current_state === 1 && last_state === 0) {\n                // Prepare INSERT statement for a new alarm\n                const insertMsg = {\n                    query: `\n                        INSERT INTO gpio_alarm_log (client_id, pin_index, start_time, end_time)\n                        VALUES ('${client_id}', ${pin_index}, to_timestamp(${timestamp}), NULL);\n                    `\n                };\n                outputMsgs.push(insertMsg);\n            }\n            // Check for a transition from HIGH (1) to LOW (0)\n            else if (current_state === 0 && last_state === 1) {\n                // Prepare UPDATE statement to end the last active alarm for this pin\n                const updateMsg = {\n                    query: `\n                        UPDATE gpio_alarm_log\n                        SET end_time = to_timestamp(${timestamp})\n                        WHERE client_id = '${client_id}' AND pin_index = ${pin_index} AND end_time IS NULL;\n                    `\n                };\n                outputMsgs.push(updateMsg);\n            }\n        }\n        // Update the last state\n        lastStates[pin_index] = current_state;\n    });\n\n    // Save the updated states back to the flow variable\n    flow.set(`last_gpio_states_${client_id}`, lastStates);\n\n    // Return an array of messages to the next node.\n    // Each message contains a query for a state change.\n    return [outputMsgs];\n\n} catch (err) {\n    node.error(\"GPIO alarm function failed: \" + err.message, msg);\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 780,
+        "wires": [
+            [
+                "edc3ae2f36ff8b58"
+            ]
+        ]
+    },
+    {
+        "id": "edc3ae2f36ff8b58",
+        "type": "postgresql",
+        "z": "9ce684c6d385cbf5",
+        "name": "insert data gpio",
+        "query": "SELECT * FROM ;",
+        "postgreSQLConfig": "9e3cdc8017bb3efa",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1460,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7cc6a07f7a557c94",
+        "type": "mqtt-broker",
+        "name": "iotdb",
+        "broker": "192.168.1.51",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "9e3cdc8017bb3efa",
+        "type": "postgreSQLConfig",
+        "name": "postgres",
+        "host": "localhost",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "iotdb",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "PostgreSQL",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "a3cb6f3dd81798e6",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-aedes": "0.15.0",
+            "node-red-contrib-postgresql": "0.14.2"
+        }
+    }
+]

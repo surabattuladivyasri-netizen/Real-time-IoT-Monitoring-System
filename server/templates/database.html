@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Raw Database Data</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --main-bg: #f7f9fc;
+            --header-bg: #ffffff;
+            --border-color: #e3e8ee;
+            --text-primary: #314259;
+            --text-secondary: #7e8c9f;
+            --accent-color: #4b6cb7;
+            --code-bg: #f1f5f9;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: var(--main-bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            background-color: var(--header-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: var(--shadow-lg);
+            border-left: 6px solid var(--accent-color);
+        }
+        h1 {
+            color: var(--text-primary);
+            font-size: 1.8em;
+            margin: 0;
+        }
+        .back-button {
+            background-color: #7e8c9f;
+            color: white;
+            padding: 10px 18px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+            box-shadow: var(--shadow-md);
+        }
+        .back-button:hover {
+            background-color: #64748b;
+        }
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-controls label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        .filter-controls select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: box-shadow 0.2s;
+        }
+        .filter-controls select:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(75, 108, 183, 0.25);
+        }
+        .export-form {
+            background-color: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .export-form input[type="datetime-local"] {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: #f1f5f9;
+        }
+        .export-btn {
+            background-color: #22c55e;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .export-btn:hover {
+            background-color: #16a34a;
+        }
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background-color: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background-color: #f8fafc;
+        }
+        .no-data {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            padding: 50px;
+            background-color: var(--header-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+        .flash {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .flash-success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #6ee7b7;
+        }
+        .flash-error {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Raw Database Data</h1>
+            <div class="filter-controls">
+                <label for="table-filter">Select Table:</label>
+                <select id="table-filter" onchange="filterTable(this.value)">
+                    <option value="readings" {% if selected_table == 'readings' %}selected{% endif %}>Readings</option>
+                    <option value="alarm_events" {% if selected_table == 'alarm_events' %}selected{% endif %}>Alarm Events</option>
+                </select>
+                <label for="client-filter">Filter by Client:</label>
+                <select id="client-filter" onchange="filterData(this.value)">
+                    <option value="all" {% if not selected_client_id or selected_client_id == 'all' %}selected{% endif %}>All Clients</option>
+                    {% for client_id in unique_client_ids %}
+                        <option value="{{ client_id }}" {% if selected_client_id == client_id %}selected{% endif %}>{{ client_id }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <a href="/admin/dashboard" class="back-button">← Back to Admin</a>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form action="/admin/export_excel" method="post" class="export-form" id="export-form">
+            <input type="hidden" name="client_id" id="hidden_client_id" value="{{ selected_client_id }}">
+            <input type="hidden" name="table" id="hidden_table" value="{{ selected_table }}">
+            <label for="from_time">From:</label>
+            <input type="datetime-local" id="from_time" name="from_time">
+            <label for="to_time">To:</label>
+            <input type="datetime-local" id="to_time" name="to_time">
+            <button type="submit" class="export-btn">Export to Excel</button>
+        </form>
+
+        {% if db_entries %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            {% if selected_table == 'readings' %}
+                                <th>ID</th>
+                                <th>Client ID</th>
+                                <th>Timestamp</th>
+                                {% for i in range(8) %}<th>Temp {{ i }}</th>{% endfor %}
+                                {% for i in range(8) %}<th>GPIO {{ i }}</th>{% endfor %}
+                                {% for i in range(8) %}<th>Hum {{ i }}</th>{% endfor %}
+                            {% else %}
+                                <th>ID</th>
+                                <th>Client ID</th>
+                                <th>Pin Index</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in db_entries %}
+                            <tr>
+                                {% if selected_table == 'readings' %}
+                                    <td>{{ entry.id }}</td>
+                                    <td>{{ entry.client_id }}</td>
+                                    <td>{{ entry.timestamp }}</td>
+                                    {% for i in range(8) %}<td>{{ entry['temp' ~ i] if entry['temp' ~ i] is not none else 'N/A' }}</td>{% endfor %}
+                                    {% for i in range(8) %}<td>{{ entry['gpio' ~ i] if entry['gpio' ~ i] is not none else 'N/A' }}</td>{% endfor %}
+                                    {% for i in range(8) %}<td>{{ entry['hum' ~ i] if entry['hum' ~ i] is not none else 'N/A' }}</td>{% endfor %}
+                                {% else %}
+                                    <td>{{ entry.id }}</td>
+                                    <td>{{ entry.client_id }}</td>
+                                    <td>{{ entry.pin_index }}</td>
+                                    <td>{{ entry.start_time }}</td>
+                                    <td>{{ entry.end_time }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-data">No data entries in the database for the selected table.</div>
+        {% endif %}
+    </div>
+    <script>
+        function filterData(clientId) {
+            const url = new URL(window.location.href);
+            if (clientId === 'all') {
+                url.searchParams.delete('client_id');
+            } else {
+                url.searchParams.set('client_id', clientId);
+            }
+            window.location.href = url.toString();
+        }
+
+        function filterTable(tableName) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('table', tableName);
+            window.location.href = url.toString();
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const clientFilter = document.getElementById('client-filter');
+            const tableFilter = document.getElementById('table-filter');
+            const hiddenClientId = document.getElementById('hidden_client_id');
+            const hiddenTable = document.getElementById('hidden_table');
+
+            function syncHiddenFields() {
+                hiddenClientId.value = clientFilter.value;
+                hiddenTable.value = tableFilter.value;
+            }
+
+            syncHiddenFields();
+
+            clientFilter.addEventListener('change', syncHiddenFields);
+            tableFilter.addEventListener('change', syncHiddenFields);
+
+            document.getElementById('export-form').addEventListener('submit', function(event) {
+                syncHiddenFields();
+            });
+        });
+    </script>
+</body>
+</html>

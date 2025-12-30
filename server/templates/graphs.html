@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Graphs</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --main-bg: #f7f9fc;
+            --card-bg: #ffffff;
+            --border-color: #e3e8ee;
+            --text-primary: #314259;
+            --text-secondary: #7e8c9f;
+            --accent-color: #4b6cb7;
+            --export-btn-bg: #22c55e;
+            --export-btn-hover: #16a34a;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--main-bg);
+            margin: 0;
+            color: var(--text-primary);
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: var(--shadow-lg);
+            border-left: 6px solid var(--accent-color);
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+        .btn {
+            color: white;
+            padding: 10px 18px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            box-shadow: var(--shadow-md);
+        }
+        .back-button {
+            background-color: #7e8c9f;
+        }
+        .back-button:hover {
+            background-color: #64748b;
+        }
+        .export-button {
+            background-color: var(--export-btn-bg);
+        }
+        .export-button:hover {
+            background-color: var(--export-btn-hover);
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 30px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
+            flex-wrap: wrap;
+        }
+        .controls label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .controls input[type="datetime-local"], .controls select {
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 1em;
+            background-color: #f1f5f9;
+        }
+        .graph-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        .client-graph-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
+            border-left: 6px solid #4b6cb7;
+        }
+        h2 {
+            font-size: 1.5em;
+            margin: 0 0 20px 0;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .plots-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .plot-area {
+            min-height: 450px;
+            width: 100%;
+            flex: 1;
+        }
+        .info-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.2em;
+            padding: 50px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+        }
+        #pdf-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); z-index: 10000; display: none;
+            justify-content: center; align-items: center; color: white;
+            font-size: 1.5em; font-weight: bold;
+        }
+        .page-break-before {
+            page-break-before: always;
+        }
+        .pdf-export-mode .plots-wrapper {
+            flex-direction: row;
+        }
+        .pdf-export-mode .plot-area {
+            min-height: 400px;
+        }
+        @media print {
+            .header, .controls, #pdf-overlay, .export-button, .back-button { display: none !important; }
+            .container { padding: 0; margin: 0; width: 100%; max-width: 100%; border: none; box-shadow: none; }
+            body { background-color: #FFFFFF; }
+            .client-graph-section { box-shadow: none; border: 1px solid var(--border-color); margin-bottom: 20px; }
+            .plots-wrapper { flex-direction: row !important; }
+            .page-break-before { page-break-before: always; }
+        }
+        .client-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="pdf-overlay">
+        <div>Generating PDF, please wait...</div>
+    </div>
+
+    <div class="container" id="exportable-content">
+        <div class="header">
+            <div class="header-left">
+                <h1>Historical Data Graphs</h1>
+            </div>
+            <div class="header-right">
+                <button id="export-button" class="btn export-button" onclick="generatePdf()">Export to PDF</button>
+                <a href="/" class="btn back-button">← Back to Dashboard</a>
+            </div>
+        </div>
+        <div class="controls">
+            <label for="timestamp-picker">View data up to:</label>
+            <input type="datetime-local" id="timestamp-picker">
+        </div>
+        <div id="graph-container" class="graph-container">
+                <div id="loading-message" class="info-message">Loading graphs...</div>
+        </div>
+    </div>
+
+    <script>
+        let allGraphData = {};
+
+        async function generatePdf() {
+            const exportBtn = document.getElementById('export-button');
+            const element = document.getElementById('exportable-content');
+            const overlay = document.getElementById('pdf-overlay');
+
+            overlay.style.display = 'flex';
+            exportBtn.disabled = true;
+
+            document.body.classList.add('pdf-export-mode');
+            
+            const clientGraphs = document.querySelectorAll('.client-graph-section');
+            const selectedChannels = {};
+            clientGraphs.forEach((clientSection, index) => {
+                const picker = clientSection.querySelector('.client-controls select');
+                if (picker) {
+                    const clientId = Object.keys(allGraphData)[index];
+                    selectedChannels[clientId] = picker.value;
+                }
+            });
+
+            await updateGraphs(true, selectedChannels);
+
+            setTimeout(() => {
+                const opt = {
+                    margin: 0.5,
+                    filename: `hardware_graphs_${new Date().toISOString().slice(0, 10)}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: false },
+                    jsPDF: { unit: 'in', format: 'A3', orientation: 'landscape' },
+                    pagebreak: { mode: 'css', before: '.page-break-before' }
+                };
+
+                html2pdf().set(opt).from(element).save().finally(() => {
+                    document.body.classList.remove('pdf-export-mode');
+                    overlay.style.display = 'none';
+                    exportBtn.disabled = false;
+                    updateGraphs(false, selectedChannels);
+                });
+            }, 700);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const timestampPicker = document.getElementById('timestamp-picker');
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            timestampPicker.value = now.toISOString().slice(0, 16);
+            
+            timestampPicker.addEventListener('change', () => updateGraphs(false, true));
+            updateGraphs(false, true);
+        });
+
+        function renderGraphs(clientData, tempPlotArea, gpioPlotArea, humPlotArea, selectedChannel, layoutOptions) {
+            let tempTraces = [];
+            let tempTitle = 'Temperature Sensors (°C)';
+            
+            tempPlotArea.innerHTML = '';
+            gpioPlotArea.innerHTML = '';
+            humPlotArea.innerHTML = '';
+
+            if (selectedChannel === 'all') {
+                for (const [seriesName, values] of Object.entries(clientData.i2c_data)) {
+                    tempTraces.push({ x: clientData.timestamps, y: values, mode: 'lines+markers', name: seriesName });
+                }
+            } else {
+                const values = clientData.i2c_data[selectedChannel];
+                if (values) {
+                    tempTraces.push({ x: clientData.timestamps, y: values, mode: 'lines+markers', name: selectedChannel });
+                    tempTitle = `Temperature: ${selectedChannel}°C`;
+                }
+            }
+
+            let gpioTraces = [];
+            for (const [seriesName, values] of Object.entries(clientData.gpio_data)) {
+                gpioTraces.push({ x: clientData.timestamps, y: values, mode: 'lines+markers', name: seriesName, line: { shape: 'hv' } });
+            }
+            
+            let humTraces = [];
+            for (const [seriesName, values] of Object.entries(clientData.hum_data)) {
+                humTraces.push({ x: clientData.timestamps, y: values, mode: 'lines+markers', name: seriesName });
+            }
+
+            if (tempTraces.length > 0) {
+                Plotly.newPlot(tempPlotArea, tempTraces, { ...layoutOptions, title: tempTitle });
+            } else {
+                tempPlotArea.innerHTML = '<div class="info-message" style="padding: 20px;">No temperature data for this client or selected channel.</div>';
+            }
+
+            if (humTraces.length > 0) {
+                Plotly.newPlot(humPlotArea, humTraces, { ...layoutOptions, title: 'Humidity Sensors (%)' });
+            } else {
+                humPlotArea.innerHTML = '<div class="info-message" style="padding: 20px;">No humidity data for this client.</div>';
+            }
+
+            if (gpioTraces.length > 0) {
+                Plotly.newPlot(gpioPlotArea, gpioTraces, { ...layoutOptions, title: 'GPIO Statuses', yaxis: { dtick: 1, gridcolor: 'var(--border-color)' } });
+            } else {
+                gpioPlotArea.innerHTML = '<div class="info-message" style="padding: 20px;">No GPIO data for this client.</div>';
+            }
+        }
+
+        async function updateGraphs(isExporting = false, selectedChannels = null) {
+            const container = document.getElementById('graph-container');
+
+            if (Object.keys(allGraphData).length === 0 || !isExporting) {
+                container.innerHTML = '<div id="loading-message" class="info-message">Fetching data...</div>';
+                const selectedTimestamp = document.getElementById('timestamp-picker').value;
+                const url = selectedTimestamp ? `/graph_data?timestamp=${selectedTimestamp}` : '/graph_data';
+                try {
+                    const response = await fetch(url);
+                    allGraphData = await response.json();
+                    container.innerHTML = '';
+                } catch (error) {
+                    console.error('Error fetching graph data:', error);
+                    container.innerHTML = '<div class="info-message" style="border-color: red;">Failed to load graph data.</div>';
+                    allGraphData = {};
+                    return;
+                }
+            }
+
+            if (Object.keys(allGraphData).length === 0) {
+                container.innerHTML = '<div class="info-message">No data found for the selected time range.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            const layoutOptions = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Arial, sans-serif', size: 12, color: '#314259' },
+                xaxis: { gridcolor: 'var(--border-color)' },
+                yaxis: { gridcolor: 'var(--border-color)' }
+            };
+
+            let clientIndex = 0;
+
+            for (const [clientName, clientData] of Object.entries(allGraphData)) {
+                const section = document.createElement('div');
+                section.className = 'client-graph-section';
+                if (clientIndex > 0) {
+                    section.classList.add('page-break-before');
+                }
+
+                const title = document.createElement('h2');
+                title.textContent = `Client: ${clientName}`;
+                section.appendChild(title);
+
+                const clientControls = document.createElement('div');
+                clientControls.className = 'client-controls';
+                
+                const dropdown = document.createElement('select');
+                dropdown.id = `i2c-channel-picker-${clientIndex}`;
+                
+                const allOption = document.createElement('option');
+                allOption.value = 'all';
+                allOption.textContent = 'All Channels';
+                dropdown.appendChild(allOption);
+
+                for (const channelName in clientData.i2c_data) {
+                    if (clientData.i2c_data.hasOwnProperty(channelName)) {
+                        const option = document.createElement('option');
+                        option.value = channelName;
+                        option.textContent = channelName;
+                        dropdown.appendChild(option);
+                    }
+                }
+                
+                if (selectedChannels && selectedChannels[clientName]) {
+                    dropdown.value = selectedChannels[clientName];
+                }
+
+                const label = document.createElement('label');
+                label.textContent = 'Select Channel:';
+                label.htmlFor = dropdown.id;
+                
+                clientControls.appendChild(label);
+                clientControls.appendChild(dropdown);
+                section.appendChild(clientControls);
+
+                const plotsWrapper = document.createElement('div');
+                plotsWrapper.className = 'plots-wrapper';
+
+                const tempPlotArea = document.createElement('div');
+                tempPlotArea.className = 'plot-area';
+                tempPlotArea.id = `temp-plot-${clientIndex}`;
+                plotsWrapper.appendChild(tempPlotArea);
+                
+                const humPlotArea = document.createElement('div');
+                humPlotArea.className = 'plot-area';
+                humPlotArea.id = `hum-plot-${clientIndex}`;
+                plotsWrapper.appendChild(humPlotArea);
+
+                const gpioPlotArea = document.createElement('div');
+                gpioPlotArea.className = 'plot-area';
+                gpioPlotArea.id = `gpio-plot-${clientIndex}`;
+                plotsWrapper.appendChild(gpioPlotArea);
+
+                section.appendChild(plotsWrapper);
+                container.appendChild(section);
+
+                dropdown.addEventListener('change', (event) => {
+                    const selectedChannel = event.target.value;
+                    renderGraphs(clientData, tempPlotArea, gpioPlotArea, humPlotArea, selectedChannel, layoutOptions);
+                });
+                
+                const initialSelectedChannel = dropdown.value;
+                renderGraphs(clientData, tempPlotArea, gpioPlotArea, humPlotArea, initialSelectedChannel, layoutOptions);
+
+                clientIndex++;
+            }
+        }
+    </script>
+</body>
+</html>
