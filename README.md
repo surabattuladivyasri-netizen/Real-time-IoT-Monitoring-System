@@ -8,7 +8,6 @@ A sophisticated, multi-tier Industrial IoT (IIoT) platform designed for real-tim
 [Click here to watch the full system demonstration video](./docs/system_demo.mp4)
 
 ---
-
 ## 🌟 Key Features
 
 - **Dynamic I2C Scanning:** The ESP32 node automatically scans the bus to identify and interface with sensors like the **MCP9808**, **SHT3x**, or **AHT20** without manual configuration.
@@ -46,10 +45,8 @@ The project is divided into four main layers to ensure scalability and reliabili
 Clone the repository and install the required Python packages:
 
 ````bash
-
 pip install -r requirements.txt
 ````
-
 
 ### 2. Configuration
 
@@ -64,18 +61,39 @@ Start the Flask dashboard:
 ```bash
 python server/app.py
 ```
+---
+
 
 ## 🔌 Hardware Setup
 
 ### ESP32
-*   Connect **W5500 Ethernet module** (CS: Pin 4).
-*   Connect **I2C sensors** to Pins 21 (SDA) and 22 (SCL).
+* **Ethernet**: Connect the **W5500 Ethernet module** (CS: Pin 4).
+* **Sensors**: Connect **I2C sensors** (MCP9808, SHT3x, or AHT20) to Pins 21 (SDA) and 22 (SCL).
+* **Relays**: Local relay control is managed via an **MCP23008** on the same I2C bus.
 
-### NanoPi
-*   Ensure the `gpio3` executable is in the `gateway` folder.
-*   Run the following command to grant execution permissions:
+### NanoPi (Gateway)
+* **Execution**: Ensure the `gpio3` binary exists in the `gateway` folder.
+* **Permissions**: Run the following command to allow the Python script to execute the binary:
+  ```bash
+  chmod +x gateway/gpio3
+
+## 🔌 Hardware Interface Setup (Gateway)
+
+The **Gateway (NanoPi)** uses a high-performance C binary to monitor GPIO pins in real-time. This binary is called by the Python client to ensure minimal latency.
+
+### 1. GPIO Monitoring Code (`gpio3.c`)
+The following C code utilizes the `wiringPi` library to scan pins 0, 2, 3, 7, 12, 13, 14, 15, and 16.
+
+### 2. Compilation Instructions
+To generate the executable required by `nanopi_client.py`, run the following commands on your NanoPi:
 
 ```bash
-chmod +x gateway/gpio3
+# Navigate to the gateway folder
+cd gateway
 
-````
+# Compile the C source code
+gcc -o gpio3 gpio3.c -lwiringPi
+
+# Grant execution permissions
+chmod +x gpio3
+```
