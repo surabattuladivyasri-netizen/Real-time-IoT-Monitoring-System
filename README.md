@@ -5,7 +5,7 @@ A sophisticated, multi-tier Industrial IoT (IIoT) platform designed for real-tim
 ---
 
 ## 📺 System Demo
-[Click here to watch the full system demonstration video][![Watch the Demo Video](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
+[Click here to watch the full system demonstration video](./docs/System_demo.mp4)
 
 ---
 ## 🌟 Key Features
