@@ -5,7 +5,7 @@ A sophisticated, multi-tier Industrial IoT (IIoT) platform designed for real-tim
 ---
 
 ## 📺 System Demo
-[Click here to watch the full system demonstration video] [Video Demo](https://github.com/surabattuladivyasri-netizen/Real-time-IoT-Monitoring-System/raw/main/docs/system_demo.mp4)
+[Click here to watch the full system demonstration video][![Watch the Demo Video](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
 
 ---
 ## 🌟 Key Features
